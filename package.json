@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/siningtong/tinyapp/issues"
   },
-  "homepage": "https://github.com/siningtong/tinyapp#readme"
+  "homepage": "https://github.com/siningtong/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
