@@ -29,11 +29,12 @@ app.get('/urls',(req,res)=>{
 })
 
 app.get('/urls/:shortURL',(req,res)=>{
+  console.log(req)
   let templateVars = {
     shortURL: req.params.shortURL,//whatever the client put in shortURL will be stored in req.params.shortURL.server look for the according long url based on the shortURl.
     longURL: urlDatabase[req.params.shortURL]
   }
-  res.render('urls_show.ejs',templateVars)
+  res.render('urls_show.ejs',templateVars)//pase templateVars to ejs,but ejs will just take the object that templateVars stands for. So in ejs, just use the key in the object,not templateVars.
 })
 
 
