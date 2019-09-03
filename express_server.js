@@ -28,6 +28,28 @@ app.get('/urls',(req,res)=>{
   res.render('urls_index', {urls: urlDatabase})
 })
 
+app.get('/urls/:shortURL',(req,res)=>{
+  let templateVars = {
+    shortURL: req.params.shortURL,//whatever the client put in shortURL will be stored in req.params.shortURL.server look for the according long url based on the shortURl.
+    longURL: urlDatabase[req.params.shortURL]
+  }
+  res.render('urls_show.ejs',templateVars)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.listen(PORT,()=>{
   console.log(`Example app listening on port ${PORT}!`)
 });
