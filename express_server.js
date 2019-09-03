@@ -61,8 +61,19 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
   res.redirect('/urls')
 })
 
+app.post('/urls/:shortURL',(req,res)=>{
+  console.log(req.params.shortURL)
+  urlDatabase[req.params.shortURL] = req.body.newURL;
+  res.redirect('/urls')
+})
 
 
+// app.get("/users/:userId/photos/:photoId", () = {
+//   req.params.userId;
+//   req.params.photoId;
+// })
+
+// /users/12/photos/abc
 
 
 
