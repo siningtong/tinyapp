@@ -11,6 +11,7 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+//console.log(urlDatabase)
 
 app.get('/', (req,res)=>{
   res.send('Hello');
@@ -28,7 +29,7 @@ app.get('/urls',(req,res)=>{
   let templateVars = {
     urls: urlDatabase
   }
-  res.render('urls_index', {urls: urlDatabase})
+  res.render('urls_index', templateVars)
 })
 
 app.get('/urls/new',(req,res)=>{
@@ -36,7 +37,6 @@ app.get('/urls/new',(req,res)=>{
 })
 
 app.get('/urls/:shortURL',(req,res)=>{
-  console.log(req)
   let templateVars = {
     shortURL: req.params.shortURL,//whatever the client put in shortURL will be stored in req.params.shortURL.server look for the according long url based on the shortURl.
     longURL: urlDatabase[req.params.shortURL]
@@ -45,15 +45,21 @@ app.get('/urls/:shortURL',(req,res)=>{
 })
 
 app.post('/urls',(req,res)=>{
-  console.log(req.body)
-  res.send('ok')
+  let randomString = generateRandomString();
+  urlDatabase[randomString] = req.body.longURL
+  res.redirect(`/urls/${randomString}`)
 })
+
+app.get("/u/:shortURL", (req, res) => {
+    const longURL = urlDatabase[req.params.shortURL]
+    console.log(longURL)
+  res.redirect(longURL);
+});
 
 function generateRandomString() {
   return Math.random().toString(36).replace('0.', '').substring(0,6)
   }
 
-  console.log(generateRandomString())
 
 
 
