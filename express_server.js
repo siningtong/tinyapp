@@ -11,10 +11,23 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  // "b2xVn2": "http://www.lighthouselabs.ca",
+  // "9sm5xK": "http://www.google.com"
 };
 //console.log(urlDatabase)
+
+const users = {
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
 
 app.get('/', (req,res)=>{
   res.send('Hello');
@@ -44,6 +57,30 @@ app.get('/urls/new',(req,res)=>{
   }
   res.render("urls_new",templateVars);
 })
+
+// app.get('/register',(req,res)=>{
+//   let templateVars ={
+//     username: req.cookies.username
+//   }
+//   res.render("urls_registration",templateVars);
+// })
+
+app.post('/register',(req,res)=>{
+  let randomUsername = generateRandomString();
+  if(req.body.email==='' || req.body.password===''){
+    res.status(400).send('Bad Request')
+  }
+  //else if(req.body.email === users[])
+  users[randomUsername] = {
+    id:randomUsername,
+    email:req.body.email,
+    password:req.body.password
+  }
+  console.log(users)
+res.cookie('user_id ',randomUsername)
+res.redirect('/urls')
+});
+
 app.post('/login',(req,res)=>{
   res.cookie('username',req.body.username);
   res.redirect('/urls');
@@ -69,7 +106,7 @@ app.post('/urls',(req,res)=>{
 
 app.get("/u/:shortURL", (req, res) => {
     const longURL = urlDatabase[req.params.shortURL]
-    console.log(longURL)
+    // console.log(longURL)
   res.redirect(longURL);
 });
 
