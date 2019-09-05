@@ -10,17 +10,23 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a> 
       </div>
     </div>
-
-      <form method="POST" action="/login">
         <div class="form-inline">
-            <% if(username){%>
-              <a class="nav-item nav-link" >Logged In As: <%= username %></a>
-              <!-- <h4>Logged In As <%= username %><span class="badge badge-secondary">TinyApp</span></h4> -->
-              
-              <button type="submit" class="btn btn-primary" name="username">Logout</button>
+            <% if(user){%>
+              <form method="POST" action="/logout"> 
+                <thead>
+                  <tr>
+                    <th scope="col">Logged In As : <%=user.email%></th>
+                  </tr>         
+                <button type="submit" class="btn btn-primary">Logout</button>  
+              </form>
         <% } else {%>
-          <input class="form-control" type="text" name="username" placeholder="username=" style="width: 300px; margin: 1em">
+          <input class="form-control" type="text" name="username" placeholder="example@email.com" style="width: 300px; margin: 1em">
+          <form method="GET" action="/register">             
+            <button type="submit" class="btn btn-primary">Register</button>  
+          </form>
+          <form method="GET" action="/login"> 
           <button type="submit" class="btn btn-primary">Login</button>
+        </form>
           <% } %>
       </div>
       </form>

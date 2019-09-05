@@ -16,6 +16,8 @@ const urlDatabase = {
 };
 //console.log(urlDatabase)
 
+
+
 const users = {
   "userRandomID": {
     id: "userRandomID", 
@@ -42,59 +44,96 @@ app.get('/hello',(req,res)=>{
 });
 
 app.get('/urls',(req,res)=>{
+  //console.log(req.cookies.user_id)
+  // get userid from cookie
+  const userId = req.cookies.user_id // 'userRandomID'
+  // get user from object
+  const user= users[userId]
+  //console.log(user)
+  // add user to template vars
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies.username
+    user:user
   }
+  //cookie_id is same to the username in the users object. Get the information from the database(users object) and pass it to the view
   //console.log(templateVars)
   // console.log(req.cookies)
   res.render('urls_index', templateVars)
 })
 
 app.get('/urls/new',(req,res)=>{
+  const userId = req.cookies.user_id;
+  const user= users[userId]
   let templateVars ={
-    username: req.cookies.username
+    user: user
   }
   res.render("urls_new",templateVars);
 })
 
-// app.get('/register',(req,res)=>{
-//   let templateVars ={
-//     username: req.cookies.username
-//   }
-//   res.render("urls_registration",templateVars);
-// })
+app.get('/register',(req,res)=>{
+  const userId = req.cookies.user_id;
+  const user= users[userId]
+  let templateVars ={
+    user: user //need to pass a username beacuse the header needs a username. If we dont pass it a username,even an empty string,the username in header will be undefined.
+  }
+  res.render("urls_registration",templateVars);
+})
 
 app.post('/register',(req,res)=>{
   let randomUsername = generateRandomString();
   if(req.body.email==='' || req.body.password===''){
-    res.status(400).send('Bad Request')
+     res.status(400).send('Bad Request')
+     return
   }
-  //else if(req.body.email === users[])
+  else if(checkEmails(req.body.email)){
+     res.status(400).send('Bad Request')
+     return
+  };
+  
   users[randomUsername] = {
     id:randomUsername,
     email:req.body.email,
     password:req.body.password
   }
-  console.log(users)
 res.cookie('user_id ',randomUsername)
 res.redirect('/urls')
 });
 
+app.get('/login',(req,res)=>{
+  const userId = req.cookies.user_id;
+  const user= users[userId]
+  let templateVars = {
+    urls: urlDatabase,
+    user:user
+  }
+  res.render('urls_login.ejs',templateVars)
+})// cause we need to use header in the page, and header require a user value,so in order to use the header ,we have to give ti the user value,or it will show undefined
+
 app.post('/login',(req,res)=>{
-  res.cookie('username',req.body.username);
+  if(checkEmails(req.body.email)===false){
+    res.status(403).send('Bad Request')
+     return
+  }
+  else if(checkEmails(req.body.email) && checkPassword(req.body.password)===false){
+    res.status(403).send('Bad Request')
+     return
+  }
+  res.cookie('user_id',req.body.username);
   res.redirect('/urls');
 })
 app.post('/logout',(req,res)=>{
-  res.clearCookie('username')
+  res.clearCookie('user_id')
   res.redirect('/urls');
 })
 app.get('/urls/:shortURL',(req,res)=>{
+  const userId = req.cookies.user_id;
+  const user= users[userId]
   let templateVars = {
     shortURL: req.params.shortURL,//whatever the client put in shortURL will be stored in req.params.shortURL.server look for the according long url based on the shortURl.
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies.username
+    user: user
   }
+  //console.log(req.cookies.user_id)
   res.render('urls_show.ejs',templateVars)//pase templateVars to ejs,but ejs will just take the object that templateVars stands for. So in ejs, just use the key in the object,not templateVars.
 })
 
@@ -116,7 +155,7 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
 })
 
 app.post('/urls/:shortURL',(req,res)=>{
-  console.log(req.params.shortURL)
+
   urlDatabase[req.params.shortURL] = req.body.newURL;
   res.redirect('/urls')
 })
@@ -133,8 +172,22 @@ function generateRandomString() {
   return Math.random().toString(36).replace('0.', '').substring(0,6)
   }
 
-
-
+function checkEmails (input){
+  for(let element in users){
+    if (users[element].email === input){
+      return true
+    }
+  }
+  return false
+}
+function checkPassword (input){
+  for(let element in users){
+    if (users[element].password === input){
+      return true
+    }
+  }
+  return false
+}
 
 
 
