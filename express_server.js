@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser())
+const bcrypt = require('bcrypt');
 const PORT = 8080;
 
 
@@ -68,12 +69,12 @@ app.get('/urls',(req,res)=>{
     userData:userData
   }
 
-  console.log(urlDatabase)
-  console.log(templateVars)
+  // console.log(urlDatabase)
+  // console.log(templateVars)
   //cookie_id is same to the username in the users object. Get the information from the database(users object) and pass it to the view
   //console.log(templateVars)
   // console.log(req.cookies)
-  console.log('hello')
+  //console.log('hello')
 
   res.render('urls_index', templateVars)
 })
@@ -113,11 +114,12 @@ app.post('/register',(req,res)=>{
      res.status(400).send('Bad Request')
      return
   };
-  
+  const password = req.body.password;//change password to be hashed
+  const hashedPassword = bcrypt.hashSync(password, 10);
   users[randomUsername] = {
     id:randomUsername,
     email:req.body.email,
-    password:req.body.password
+    password:hashedPassword
   }
 res.cookie('user_id ',randomUsername)
 res.redirect('/urls')
@@ -140,22 +142,15 @@ app.post('/login',(req,res)=>{
   if(!user){
     res.status(403).send('Bad Request')
     return
-  } //throw 403 request
-  else if (user.password !== req.body.password){
+  } 
+  else if (bcrypt.compareSync(req.body.password, user.password) === false){
     res.status(403).send('Bad Request')
      return
-  } //throw 403 request
+  } 
   else {
-    res.cookie('user_id',user.id); //<< where the problem is
+    res.cookie('user_id',user.id); //<< where the problem was
     res.redirect('/urls');
   }
-  // if(checkEmails(req.body.email)===false){
-    
-  // }
-  // else if(checkEmails(req.body.email) && checkPassword(req.body.password)===false){
-  //   res.status(403).send('Bad Request')
-  //    return
-  // }
   
 })
 app.post('/logout',(req,res)=>{
@@ -164,7 +159,7 @@ app.post('/logout',(req,res)=>{
 })
 
 app.get('/urls/:shortURL',(req,res)=>{
-  if(req.cookies.user_id !== urlDatabase[req.params.shortURL].userID){
+  if(!urlDatabase[req.params.shortURL] ||  req.cookies.user_id !== urlDatabase[req.params.shortURL].userID){
     res.send('Does not belong to you')
     return
   }    
@@ -172,7 +167,7 @@ app.get('/urls/:shortURL',(req,res)=>{
   const userData= users[userId]
   let templateVars = {
     shortURL: req.params.shortURL,//whatever the client put in shortURL will be stored in req.params.shortURL.server look for the according long url based on the shortURl.
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user:userId,
     userData:userData
   }
@@ -181,9 +176,10 @@ app.get('/urls/:shortURL',(req,res)=>{
 })
 
 app.get('/u/:id',(req,res)=>{
-  res.status(301).redirect(urlDatabase[req.params.id].longURL)
+  res.status(301).redirect("http://"+urlDatabase[req.params.id].longURL)
   return
 })
+
 
 app.post('/urls',(req,res)=>{
   //console.log(urlDatabase)
@@ -209,9 +205,19 @@ app.post('/urls',(req,res)=>{
 //    ;
 // });
 
+
+app.post('/urls/:shortURL',(req,res)=>{
+  console.log('========================')
+    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+    console.log(urlDatabase)
+    res.redirect('/urls');
+    return;
+  })
+
+
 app.post('/urls/:shortURL/delete',(req,res)=>{
-  console.log(urlDatabase)
-  console.log(req.params)
+  //console.log(urlDatabase)
+  //console.log(req.params)
    if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID){
     delete urlDatabase[req.params.shortURL]
    
@@ -219,11 +225,7 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
   return res.redirect('/urls')
 })
 
-app.post('/urls/:shortURL',(req,res)=>{
 
-  urlDatabase[req.params.shortURL] = req.body.newURL;
-  res.redirect('/urls')
-})
 
 //
 /**
