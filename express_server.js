@@ -18,7 +18,7 @@ const urlDatabase = {
 
 
 const users = {
-  "uaJ48lW": {
+  "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
     password: "purple-monkey-dinosaur"
@@ -52,13 +52,13 @@ app.get('/urls',(req,res)=>{
   const userId = req.cookies.user_id // 'userRandomID'
   // get user from object
   if(!users[userId]){
-    res.redirect('/login')
+    return res.redirect('/login')
   }
 
   const userData= users[userId]
-  console.log('users:', users);
-  console.log('userID', userId);
-  console.log('cookies', req.cookies);
+  // console.log('users:', users);
+  // console.log('userID', userId);
+  // console.log('cookies', req.cookies);
 
   // add user to template vars
   let templateVars = {
@@ -67,10 +67,14 @@ app.get('/urls',(req,res)=>{
     user:userId,
     userData:userData
   }
+
+  console.log(urlDatabase)
   console.log(templateVars)
   //cookie_id is same to the username in the users object. Get the information from the database(users object) and pass it to the view
   //console.log(templateVars)
   // console.log(req.cookies)
+  console.log('hello')
+
   res.render('urls_index', templateVars)
 })
 
@@ -143,7 +147,7 @@ app.post('/login',(req,res)=>{
   } //throw 403 request
   else {
     res.cookie('user_id',user.id); //<< where the problem is
-  res.redirect('/urls');
+    res.redirect('/urls');
   }
   // if(checkEmails(req.body.email)===false){
     
@@ -160,6 +164,10 @@ app.post('/logout',(req,res)=>{
 })
 
 app.get('/urls/:shortURL',(req,res)=>{
+  if(req.cookies.user_id !== urlDatabase[req.params.shortURL].userID){
+    res.send('Does not belong to you')
+    return
+  }    
   const userId = req.cookies.user_id;
   const userData= users[userId]
   let templateVars = {
@@ -170,6 +178,11 @@ app.get('/urls/:shortURL',(req,res)=>{
   }
   //console.log(req.cookies.user_id)
   res.render('urls_show.ejs',templateVars)//pass templateVars to ejs,but ejs will just take the object that templateVars stands for. So in ejs, just use the key in the object,not templateVars.
+})
+
+app.get('/u/:id',(req,res)=>{
+  res.status(301).redirect(urlDatabase[req.params.id].longURL)
+  return
 })
 
 app.post('/urls',(req,res)=>{
@@ -183,15 +196,27 @@ app.post('/urls',(req,res)=>{
   res.redirect(`/urls/${randomString}`)
 })
 
-app.get("/u/:shortURL", (req, res) => {
-    const longURL = urlDatabase[req.params.shortURL]
-    // console.log(longURL)
-  res.redirect(longURL);
-});
+// app.get("/urls/:shortURL", (req, res) => {
+//   console.log('sdf,sdbf,sdbfk')
+//   if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID){
+//     const longURL = urlDatabase[req.params.shortURL].longURL
+//     //res.redirect(longURL)
+//     // res.redirect(`/urls/${longURL}`)
+//   }
+  
+//   res.send(`${req.params.shortURL}does not belong to you`)
+//     // console.log(longURL)
+//    ;
+// });
 
 app.post('/urls/:shortURL/delete',(req,res)=>{
-  delete urlDatabase[req.params.shortURL]
-  res.redirect('/urls')
+  console.log(urlDatabase)
+  console.log(req.params)
+   if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID){
+    delete urlDatabase[req.params.shortURL]
+   
+   }
+  return res.redirect('/urls')
 })
 
 app.post('/urls/:shortURL',(req,res)=>{
