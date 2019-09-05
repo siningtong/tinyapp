@@ -16,11 +16,12 @@
                 <thead>
                   <tr>
                     <th scope="col">Logged In As : <%=user.email%></th>
-                  </tr>         
+                  </tr> 
+                 </thead>        
                 <button type="submit" class="btn btn-primary">Logout</button>  
               </form>
         <% } else {%>
-          <input class="form-control" type="text" name="username" placeholder="example@email.com" style="width: 300px; margin: 1em">
+          <!-- <input class="form-control" type="text" name="username" placeholder="example@email.com" style="width: 300px; margin: 1em"> -->
           <form method="GET" action="/register">             
             <button type="submit" class="btn btn-primary">Register</button>  
           </form>
