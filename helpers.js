@@ -6,4 +6,4 @@ function getUserByEmail (email, database){
   }
   return false
 }
-module.exports={getUserByEmail};
+module.exports=getUserByEmail;
