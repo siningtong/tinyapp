@@ -91,9 +91,9 @@ app.post('/register', (req, res) => {
     res.status(400).send('<html><body><b>Bad Request!<b></body></html>');
     return;
   } else if (getUserByEmail(req.body.email,users)) {
-     res.status(400).send('<html><body><b>Bad Request!<b></body></html>');
-     return;
-  };
+    res.status(400).send('<html><body><b>Bad Request!<b></body></html>');
+    return;
+  }
   const password = req.body.password;//change password to be hashed
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[randomUsername] = {
@@ -101,8 +101,8 @@ app.post('/register', (req, res) => {
     email:req.body.email,
     password:hashedPassword
   };
-req.session.user_id = randomUsername;
-res.redirect('/urls');
+  req.session.user_id = randomUsername;
+  res.redirect('/urls');
 });
 
 app.get('/login',(req,res) => {
@@ -112,37 +112,35 @@ app.get('/login',(req,res) => {
     urls: urlDatabase,
     user:userId,
     userData:userData
-  }
+  };
   res.render('urls_login.ejs', templateVars);
-})// cause we need to use header in the page, and header require a user value,so in order to use the header ,we have to give ti the user value,or it will show undefined
+});// cause we need to use header in the page, and header require a user value,so in order to use the header ,we have to give ti the user value,or it will show undefined
 
 app.post('/login', (req, res) => {
-  const userEmail = req.body.email; 
+  const userEmail = req.body.email;
   const user = getUserByEmail(userEmail, users);
-  if (user === false){
+  if (user === false) {
     res.status(403).send('<html><body><b>Bad Request!<b></body></html>');
     return;
-  } 
-  else if (bcrypt.compareSync(req.body.password, user.password) === false) {
+  } else if (bcrypt.compareSync(req.body.password, user.password) === false) {
     res.status(403).send('<html><body><b>Bad Request!<b></body></html>');
-     return;
-  } 
-  else {
+    return;
+  } else {
     req.session.user_id = user.id; //req.session.cookiename  = value
     res.redirect('/urls');
   }
-})
+});
 
 app.post('/logout', (req,res) => {
   req.session = null;
   res.redirect('/urls');
-})
+});
 
 app.get('/urls/:shortURL', (req, res) => {
-  if(!urlDatabase[req.params.shortURL] ||  req.session.user_id !== urlDatabase[req.params.shortURL].userID){
+  if (!urlDatabase[req.params.shortURL] ||  req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.send('<html><body><b>This URL does not belong to you<b></body></html>');
     return;
-  }    
+  }
   const userId = req.session.user_id;
   const userData = users[userId];
   let templateVars = {
@@ -150,9 +148,9 @@ app.get('/urls/:shortURL', (req, res) => {
     longURL: urlDatabase[req.params.shortURL].longURL,
     user:userId,
     userData:userData
-  }
+  };
   res.render('urls_show.ejs', templateVars);//pass templateVars to ejs,but ejs will just take the object that templateVars stands for. So in ejs, just use the key in the object,not templateVars.
-})
+});
 
 app.get('/u/:id',(req,res) => {
   if (!urlDatabase[req.params.id]) {
@@ -161,47 +159,44 @@ app.get('/u/:id',(req,res) => {
   }
   res.status(301).redirect("http://" + urlDatabase[req.params.id].longURL);
   return;
-})
+});
 
 app.post('/urls', (req, res) => {
   let randomString = generateRandomString();
   urlDatabase[randomString] = {
     longURL: req.body.longURL,
     userID: req.session.user_id
-  }
+  };
   res.redirect(`/urls/${randomString}`);
-})
+});
 
 app.post('/urls/:shortURL', (req, res) => {
-    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-    res.redirect('/urls');
-    return;
-  })
+  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+  res.redirect('/urls');
+  return;
+});
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  //console.log(urlDatabase)
-  //console.log(req.params)
-   if (req.session.user_id === urlDatabase[req.params.shortURL].userID){
+  if (req.session.user_id === urlDatabase[req.params.shortURL].userID) {
     delete urlDatabase[req.params.shortURL];
-   
-   }
+  }
   return res.redirect('/urls');
-})
+});
 
 function generateRandomString() {
   return Math.random().toString(36).replace('0.', '').substring(0,6);
-  }
+}
 
-function urlsForUser(id){
+function urlsForUser(id) {
   let urlArray = [];
-  for(let key in urlDatabase){
-    if(urlDatabase[key]['userID'] === id){
+  for (let key in urlDatabase) {
+    if (urlDatabase[key]['userID'] === id) {
       urlArray.push(key);
-    };
-  };
+    }
+  }
   return urlArray;
 }
 
 app.listen(PORT,() => {
-  console.log(`Example app listening on port ${PORT}!`)
+  console.log(`Example app listening on port ${PORT}!`);
 });
