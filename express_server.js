@@ -1,17 +1,14 @@
 const express = require('express');
 const cookieSession = require('cookie-session')
-//const cookieParser = require('cookie-parser');
 const app = express();
-//app.use(cookieParser())
 app.use(cookieSession({
   name: 'session',
-  keys: ['asdf'],
-
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  keys: ['asdf']
 }))
 const bcrypt = require('bcrypt');
 const PORT = 8080;
+
+const getUserByEmail=require('./helpers.js')
 
 
 app.set('view engine','ejs');
@@ -118,7 +115,7 @@ app.post('/register',(req,res)=>{
      res.status(400).send('Bad Request')
      return
   }
-  else if(checkEmails(req.body.email)){
+  else if(getUserByEmail(req.body.email,users)){
      res.status(400).send('Bad Request')
      return
   };
@@ -146,7 +143,7 @@ app.get('/login',(req,res)=>{
 
 app.post('/login',(req,res)=>{
   const userEmail = req.body.email; 
-  const user = checkEmails(userEmail); //1) return user object matching with email, 2) return false
+  const user = getUserByEmail(userEmail,users); //1) return user object matching with email, 2) return false
   if(!user){
     res.status(403).send('Bad Request')
     return
@@ -156,19 +153,19 @@ app.post('/login',(req,res)=>{
      return
   } 
   else {
-    res.cookie('user_id',user.id); //<< where the problem was
-    res.redirect('/urls');
+    req.session.user_id=user.id; //<< where the problem was
+    res.redirect('/urls');//req.session.cookiename  = value
   }
   
 })
 app.post('/logout',(req,res)=>{
-  res.clearCookie('user_id')
+  req.session=null
   res.redirect('/urls');
 })
 
 app.get('/urls/:shortURL',(req,res)=>{
   if(!urlDatabase[req.params.shortURL] ||  req.session.user_id !== urlDatabase[req.params.shortURL].userID){
-    res.send('Does not belong to you')
+    res.send('This URL does not belong to you')
     return
   }    
   const userId = req.session.user_id;
@@ -215,9 +212,8 @@ app.post('/urls',(req,res)=>{
 
 
 app.post('/urls/:shortURL',(req,res)=>{
-  console.log('========================')
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-    console.log(urlDatabase)
+    //console.log(urlDatabase)
     res.redirect('/urls');
     return;
   })
@@ -240,20 +236,6 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
  * getUserByEmail
  *  return user obj that matches with email
  */
-// users:  
-//   userRandomID: 
-//   { id: 'userRandomID',
-//     email: 'user@example.com',
-//     password: 'purple-monkey-dinosaur' },
-//  user2RandomID: 
-//   { id: 'user2RandomID',
-//     email: 'user2@example.com',
-//     password: 'dishwasher-funk' } }
-//   jjjwer:
-//   {
-//      id: jjjwer
-//   }
-// }
 
 
 
@@ -263,14 +245,27 @@ function generateRandomString() {
   return Math.random().toString(36).replace('0.', '').substring(0,6)
   }
 
-function checkEmails (input){
-  for(let element in users){
-    if (users[element].email === input){
-      return users[element]
-    }
-  }
-  return false
-}
+  // function getUserByEmail (email, database){
+  //   for(let element in database){
+  //     console.log(users)
+  //     if (database[element].email === email){
+  //       return users[element]
+  //     }
+  //   }
+  //   return false
+  // }
+
+// function getUserByEmail (input){
+//   for(let element in users){
+//     if (users[element].email === input){
+//       return users[element]
+//     }
+//   }
+//   return false
+// }
+
+
+
 // function checkPassword (input){
 //   for(let element in users){
 //     if (users[element].password === input){
@@ -291,21 +286,6 @@ function urlsForUser(id){
 }
 
 
-
-
-
-
-
-
-
-
 app.listen(PORT,()=>{
   console.log(`Example app listening on port ${PORT}!`)
 });
-
-
-/**
- * 1) url_show
- * 2) after you create a new url, if you click My URL, there is an error
- * 
- */
