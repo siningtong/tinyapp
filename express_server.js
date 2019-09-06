@@ -1,7 +1,15 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
+//const cookieParser = require('cookie-parser');
 const app = express();
-app.use(cookieParser())
+//app.use(cookieParser())
+app.use(cookieSession({
+  name: 'session',
+  keys: ['asdf'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 const bcrypt = require('bcrypt');
 const PORT = 8080;
 
@@ -50,7 +58,7 @@ app.get('/urls',(req,res)=>{
   // }
   //console.log(req.cookies.user_id)
   // get userid from cookie
-  const userId = req.cookies.user_id // 'userRandomID'
+  const userId = req.session.user_id // 'userRandomID'
   // get user from object
   if(!users[userId]){
     return res.redirect('/login')
@@ -80,11 +88,11 @@ app.get('/urls',(req,res)=>{
 })
 
 app.get('/urls/new', (req,res)=>{
-  if(req.cookies.user_id===undefined){
+  if(req.session.user_id===undefined){
     res.redirect('/login')
     return
   }
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const userData= users[userId]
   let templateVars ={
     user:userId,
@@ -95,7 +103,7 @@ app.get('/urls/new', (req,res)=>{
 })
 
 app.get('/register',(req,res)=>{
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const userData= users[userId]
   let templateVars ={
     user:userId,
@@ -117,16 +125,16 @@ app.post('/register',(req,res)=>{
   const password = req.body.password;//change password to be hashed
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[randomUsername] = {
-    id:randomUsername,
+    id:req.session.user_id=randomUsername,
     email:req.body.email,
     password:hashedPassword
   }
-res.cookie('user_id ',randomUsername)
+res.cookie('user_id ',users.id)//Update Our Cookie Code
 res.redirect('/urls')
 });
 
 app.get('/login',(req,res)=>{
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const userData= users[userId]
   let templateVars = {
     urls: urlDatabase,
@@ -159,11 +167,11 @@ app.post('/logout',(req,res)=>{
 })
 
 app.get('/urls/:shortURL',(req,res)=>{
-  if(!urlDatabase[req.params.shortURL] ||  req.cookies.user_id !== urlDatabase[req.params.shortURL].userID){
+  if(!urlDatabase[req.params.shortURL] ||  req.session.user_id !== urlDatabase[req.params.shortURL].userID){
     res.send('Does not belong to you')
     return
   }    
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const userData= users[userId]
   let templateVars = {
     shortURL: req.params.shortURL,//whatever the client put in shortURL will be stored in req.params.shortURL.server look for the according long url based on the shortURl.
@@ -186,7 +194,7 @@ app.post('/urls',(req,res)=>{
   let randomString = generateRandomString();
   urlDatabase[randomString]={
     longURL: req.body.longURL,
-    userID: req.cookies.user_id
+    userID: req.session.user_id
   }
   //console.log(urlDatabase)
   res.redirect(`/urls/${randomString}`)
@@ -218,7 +226,7 @@ app.post('/urls/:shortURL',(req,res)=>{
 app.post('/urls/:shortURL/delete',(req,res)=>{
   //console.log(urlDatabase)
   //console.log(req.params)
-   if(req.cookies.user_id === urlDatabase[req.params.shortURL].userID){
+   if(req.session.user_id === urlDatabase[req.params.shortURL].userID){
     delete urlDatabase[req.params.shortURL]
    
    }
